@@ -5,6 +5,7 @@ from typing import Optional
 
 import psutil
 from astrbot.api import AstrBotConfig, logger
+from astrbot.api.event import AstrMessageEvent, filter
 from astrbot.api.star import Context, Star, register
 
 
@@ -12,7 +13,7 @@ from astrbot.api.star import Context, Star, register
     "memory_monitor",
     "ChatGPT",
     "监控本机内存占用，超过阈值后在群里@指定用户告警。",
-    "1.1.0",
+    "1.2.0",
 )
 class MemoryMonitorPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -39,6 +40,25 @@ class MemoryMonitorPlugin(Star):
             except asyncio.CancelledError:
                 pass
         logger.info("[memory_monitor] 内存监控任务已停止。")
+
+    @filter.event_message_type(filter.EventMessageType.ALL)
+    async def detect_memchk_keyword(self, event: AstrMessageEvent):
+        message = (event.message_str or "").strip()
+        if not re.search(r"\bmemchk\b", message, flags=re.IGNORECASE):
+            return
+
+        vm = psutil.virtual_memory()
+        percent = float(vm.percent)
+        total_gb = vm.total / (1024 ** 3)
+        used_gb = (vm.total - vm.available) / (1024 ** 3)
+        threshold = int(self.config.get("mem_threshold_percent", 80) or 80)
+        status = "⚠️ 高于阈值" if percent >= threshold else "✅ 正常"
+
+        yield event.plain_result(
+            f"{status}\n"
+            f"当前内存占用：{percent:.1f}%（阈值 {threshold}%）\n"
+            f"已用/总计：{used_gb:.2f}GB / {total_gb:.2f}GB"
+        )
 
     async def _monitor_loop(self):
         while self._is_running:
@@ -105,13 +125,9 @@ class MemoryMonitorPlugin(Star):
         return None
 
     def _parse_target_user_ids(self) -> list[str]:
-        # 新配置：target_user_ids，支持逗号/分号/空白分隔
         raw_multi = str(self.config.get("target_user_ids", "")).strip()
-        # 兼容旧配置：target_user_id
-        raw_single = str(self.config.get("target_user_id", "")).strip()
-        merged = f"{raw_multi},{raw_single}" if raw_single else raw_multi
 
-        tokens = [t.strip() for t in re.split(r"[\s,;，；]+", merged) if t.strip()]
+        tokens = [t.strip() for t in re.split(r"[\s,;，；]+", raw_multi) if t.strip()]
         result: list[str] = []
         seen = set()
         for token in tokens:
@@ -127,7 +143,7 @@ class MemoryMonitorPlugin(Star):
 
         if not group_id.isdigit() or not user_ids:
             logger.warning(
-                "[memory_monitor] 发送告警失败：请正确配置 target_group_id 和 target_user_ids/target_user_id。"
+                "[memory_monitor] 发送告警失败：请正确配置 target_group_id 和 target_user_ids。"
             )
             return False
 

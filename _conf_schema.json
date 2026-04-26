@@ -7,19 +7,19 @@
   },
   "mem_threshold_percent": {
     "label": "内存阈值(%)",
-    "description": "当内存占用大于等于此值时触发告警。（单位：%）",
+    "description": "当内存占用大于等于此值时触发告警。",
     "type": "int",
     "default": 80
   },
   "check_interval_seconds": {
     "label": "检查间隔(秒)",
-    "description": "内存检查周期，建议 >= 10。（单位：秒）",
+    "description": "内存检查周期，建议 >= 10。",
     "type": "int",
     "default": 30
   },
   "alert_cooldown_minutes": {
     "label": "告警冷却(分钟)",
-    "description": "两次告警之间的最短间隔，防止刷屏。（单位：分钟）",
+    "description": "两次告警之间的最短间隔，防止刷屏。",
     "type": "int",
     "default": 30
   },
@@ -32,12 +32,6 @@
   "target_user_ids": {
     "label": "被@用户QQ号列表",
     "description": "可填写多个 QQ 号，支持英文/中文逗号、分号或空格分隔。",
-    "type": "string",
-    "default": ""
-  },
-  "target_user_id": {
-    "label": "被@用户QQ号(兼容旧配置)",
-    "description": "旧版单用户字段。建议改用 target_user_ids。",
     "type": "string",
     "default": ""
   },
