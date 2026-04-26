@@ -1,9 +1,10 @@
 import asyncio
+import importlib
 import re
 import time
+from types import ModuleType
 from typing import Optional
 
-import psutil
 from astrbot.api import AstrBotConfig, logger
 from astrbot.api.event import AstrMessageEvent, filter
 from astrbot.api.star import Context, Star, register
@@ -13,7 +14,8 @@ from astrbot.api.star import Context, Star, register
     "memory_monitor",
     "OneRingR & ChatGPT",
     "监控本机内存占用，超过阈值后在群里@指定用户告警。",
-    "1.3.0",
+    "1.3.1",
+    "https://github.com/oneringr/astrbot_plugin_memory_monitor",
 )
 class MemoryMonitorPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -27,6 +29,12 @@ class MemoryMonitorPlugin(Star):
     async def initialize(self):
         if not bool(self.config.get("enable_monitor", True)):
             logger.info("[memory_monitor] 监控未启用，跳过启动。")
+            return
+        if self._load_psutil() is None:
+            logger.error(
+                "[memory_monitor] 缺少依赖 psutil，监控任务未启动。"
+                "请安装 requirements.txt 后重载/重启插件。"
+            )
             return
         self._task = asyncio.create_task(self._monitor_loop())
         logger.info("[memory_monitor] 内存监控任务已启动。")
@@ -47,16 +55,31 @@ class MemoryMonitorPlugin(Star):
         yield event.plain_result(self._build_memory_status_text())
         event.stop_event()
 
-    @filter.event_message_type(filter.EventMessageType.ALL)
+    @filter.regex(r"(?i)^/?memchk$")
     async def memchk_plain(self, event: AstrMessageEvent):
         """兼容无指令前缀的 memchk 查询。"""
-        if event.message_str.strip().lower() != "memchk":
+        if event.is_at_or_wake_command:
             return
 
         yield event.plain_result(self._build_memory_status_text())
         event.stop_event()
 
+    @staticmethod
+    def _load_psutil() -> Optional[ModuleType]:
+        try:
+            return importlib.import_module("psutil")
+        except ImportError:
+            return None
+
     def _build_memory_status_text(self) -> str:
+        psutil = self._load_psutil()
+        if psutil is None:
+            return (
+                "内存查询失败：缺少依赖 psutil。\n"
+                "请在插件目录执行 pip install -r requirements.txt，"
+                "或重启 AstrBot 让它自动安装依赖。"
+            )
+
         vm = psutil.virtual_memory()
         percent = float(vm.percent)
         total_gb = vm.total / (1024 ** 3)
@@ -82,6 +105,11 @@ class MemoryMonitorPlugin(Star):
             await asyncio.sleep(interval)
 
     async def _check_memory_and_alert(self):
+        psutil = self._load_psutil()
+        if psutil is None:
+            logger.error("[memory_monitor] 缺少依赖 psutil，跳过本轮内存检查。")
+            return
+
         threshold = int(self.config.get("mem_threshold_percent", 80) or 80)
         cooldown_min = max(0, int(self.config.get("alert_cooldown_minutes", 30) or 30))
         send_recovery = bool(self.config.get("send_recovery_notice", False))

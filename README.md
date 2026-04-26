@@ -16,6 +16,7 @@ AstrBot 插件：监控本机内存占用，达到阈值后自动在群聊中 `@
 
 1. 网页安装或将本插件放到 `AstrBot/data/plugins/astrbot_plugin_memory_monitor`。
 2. 在 AstrBot 插件管理中启用插件并填写配置。
+3. 如果手动安装后依赖未自动安装，请在插件目录执行 `pip install -r requirements.txt`，然后重载/重启插件。
 
 ## 配置项说明
 
