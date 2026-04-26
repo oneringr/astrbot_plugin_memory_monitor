@@ -1,0 +1,56 @@
+{
+  "enable_monitor": {
+    "label": "启用内存监控",
+    "description": "关闭后插件不会启动监控任务。",
+    "type": "bool",
+    "default": true
+  },
+  "mem_threshold_percent": {
+    "label": "内存阈值(%)",
+    "description": "当内存占用大于等于此值时触发告警。",
+    "type": "int",
+    "default": 80
+  },
+  "check_interval_seconds": {
+    "label": "检查间隔(秒)",
+    "description": "内存检查周期，建议 >= 10。",
+    "type": "int",
+    "default": 30
+  },
+  "alert_cooldown_minutes": {
+    "label": "告警冷却(分钟)",
+    "description": "两次告警之间的最短间隔，防止刷屏。",
+    "type": "int",
+    "default": 30
+  },
+  "target_group_id": {
+    "label": "告警群号",
+    "description": "OneBot 群号（纯数字）。",
+    "type": "string",
+    "default": ""
+  },
+  "target_user_ids": {
+    "label": "被@用户QQ号列表",
+    "description": "可填写多个 QQ 号，支持英文/中文逗号、分号或空格分隔。",
+    "type": "string",
+    "default": ""
+  },
+  "target_user_id": {
+    "label": "被@用户QQ号(兼容旧配置)",
+    "description": "旧版单用户字段。建议改用 target_user_ids。",
+    "type": "string",
+    "default": ""
+  },
+  "alert_message": {
+    "label": "自定义告警消息模板",
+    "description": "可留空使用默认模板。支持变量：{percent} {threshold} {used} {total}",
+    "type": "text",
+    "default": ""
+  },
+  "send_recovery_notice": {
+    "label": "发送恢复通知",
+    "description": "内存从超阈值恢复到正常时发送一次通知。",
+    "type": "bool",
+    "default": false
+  }
+}
