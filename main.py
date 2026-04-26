@@ -1,4 +1,5 @@
 import asyncio
+import re
 import time
 from typing import Optional
 
@@ -11,7 +12,7 @@ from astrbot.api.star import Context, Star, register
     "memory_monitor",
     "ChatGPT",
     "监控本机内存占用，超过阈值后在群里@指定用户告警。",
-    "1.0.0",
+    "1.1.0",
 )
 class MemoryMonitorPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -59,7 +60,6 @@ class MemoryMonitorPlugin(Star):
         current_percent = float(vm.percent)
         above = current_percent >= threshold
 
-        # 恢复通知（可选）
         if send_recovery and self._last_above_threshold and not above:
             await self._send_group_alert(
                 f"✅ 内存已恢复正常：当前 {current_percent:.1f}%（阈值 {threshold}%）"
@@ -104,12 +104,31 @@ class MemoryMonitorPlugin(Star):
             logger.debug(f"[memory_monitor] 获取适配器失败: {e}")
         return None
 
+    def _parse_target_user_ids(self) -> list[str]:
+        # 新配置：target_user_ids，支持逗号/分号/空白分隔
+        raw_multi = str(self.config.get("target_user_ids", "")).strip()
+        # 兼容旧配置：target_user_id
+        raw_single = str(self.config.get("target_user_id", "")).strip()
+        merged = f"{raw_multi},{raw_single}" if raw_single else raw_multi
+
+        tokens = [t.strip() for t in re.split(r"[\s,;，；]+", merged) if t.strip()]
+        result: list[str] = []
+        seen = set()
+        for token in tokens:
+            if not token.isdigit() or token in seen:
+                continue
+            seen.add(token)
+            result.append(token)
+        return result
+
     async def _send_group_alert(self, text: str) -> bool:
         group_id = str(self.config.get("target_group_id", "")).strip()
-        user_id = str(self.config.get("target_user_id", "")).strip()
+        user_ids = self._parse_target_user_ids()
 
-        if not group_id.isdigit() or not user_id.isdigit():
-            logger.warning("[memory_monitor] 发送告警失败：请正确配置 target_group_id 与 target_user_id。")
+        if not group_id.isdigit() or not user_ids:
+            logger.warning(
+                "[memory_monitor] 发送告警失败：请正确配置 target_group_id 和 target_user_ids/target_user_id。"
+            )
             return False
 
         client = self._get_client()
@@ -117,17 +136,19 @@ class MemoryMonitorPlugin(Star):
             logger.warning("[memory_monitor] 发送告警失败：未找到可用适配器客户端。")
             return False
 
-        message = [
-            {"type": "at", "data": {"qq": user_id}},
-            {"type": "text", "data": {"text": f" {text}"}},
-        ]
+        message = []
+        for uid in user_ids:
+            message.append({"type": "at", "data": {"qq": uid}})
+            message.append({"type": "text", "data": {"text": " "}})
+        message.append({"type": "text", "data": {"text": text}})
+
         try:
             await client.api.call_action(
                 "send_group_msg",
                 group_id=int(group_id),
                 message=message,
             )
-            logger.info("[memory_monitor] 告警消息发送成功。")
+            logger.info(f"[memory_monitor] 告警消息发送成功，@人数: {len(user_ids)}")
             return True
         except Exception as e:
             logger.error(f"[memory_monitor] 发送告警异常: {e}", exc_info=True)

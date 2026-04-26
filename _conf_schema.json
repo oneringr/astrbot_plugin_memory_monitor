@@ -29,9 +29,15 @@
     "type": "string",
     "default": ""
   },
+  "target_user_ids": {
+    "label": "被@用户QQ号列表",
+    "description": "可填写多个 QQ 号，支持英文/中文逗号、分号或空格分隔。",
+    "type": "string",
+    "default": ""
+  },
   "target_user_id": {
-    "label": "被@用户QQ号",
-    "description": "达到阈值后会在群里 @ 该用户（纯数字）。",
+    "label": "被@用户QQ号(兼容旧配置)",
+    "description": "旧版单用户字段。建议改用 target_user_ids。",
     "type": "string",
     "default": ""
   },

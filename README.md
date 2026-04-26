@@ -1,12 +1,12 @@
 # astrbot_plugin_memory_monitor
 
-AstrBot 插件：监控本机内存占用，达到阈值后自动在群聊中 `@` 指定用户。
+AstrBot 插件：监控本机内存占用，达到阈值后自动在群聊中 `@` 一个或多个指定用户。
 
 ## 功能
 
 - 定时读取本机内存占用（`psutil.virtual_memory()`）
 - 内存占用达到阈值后自动发送群消息
-- 消息中自动 `@` 指定 QQ 用户
+- 支持同时 `@` 多个 QQ 用户
 - 支持告警冷却，避免反复刷屏
 - 支持可选的“恢复正常”通知
 
@@ -28,7 +28,10 @@ pip install -r requirements.txt
 - `check_interval_seconds`: 检查周期（秒）
 - `alert_cooldown_minutes`: 告警冷却时间（分钟）
 - `target_group_id`: 发送告警的群号
-- `target_user_id`: 被 @ 的用户 QQ 号
+- `target_user_ids`: 被 @ 的用户 QQ 号列表（推荐）
+  - 支持分隔符：英文/中文逗号、英文/中文分号、空格
+  - 例如：`12345678,87654321 11223344`
+- `target_user_id`: 旧版单用户字段（兼容保留，不推荐新配置继续使用）
 - `alert_message`: 自定义告警消息模板（可选）
   - 支持变量：`{percent}` `{threshold}` `{used}` `{total}`
 - `send_recovery_notice`: 内存恢复时发送恢复通知（可选）
@@ -36,7 +39,7 @@ pip install -r requirements.txt
 ## 告警消息示例
 
 ```text
-@12345678 ⚠️ 内存告警：当前占用 87.5%（阈值 80%）
+@12345678 @87654321 ⚠️ 内存告警：当前占用 87.5%（阈值 80%）
 已用/总计：13.99GB / 16.00GB
 ```
 
