@@ -11,7 +11,7 @@ from astrbot.api.star import Context, Star, register
 
 @register(
     "memory_monitor",
-    "ChatGPT",
+    "OneRingR & ChatGPT",
     "监控本机内存占用，超过阈值后在群里@指定用户告警。",
     "1.3.0",
 )
