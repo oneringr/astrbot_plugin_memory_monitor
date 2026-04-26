@@ -44,6 +44,19 @@ class MemoryMonitorPlugin(Star):
     @filter.command("memchk")
     async def memchk(self, event: AstrMessageEvent):
         """手动查询当前内存占用。"""
+        yield event.plain_result(self._build_memory_status_text())
+        event.stop_event()
+
+    @filter.event_message_type(filter.EventMessageType.ALL)
+    async def memchk_plain(self, event: AstrMessageEvent):
+        """兼容无指令前缀的 memchk 查询。"""
+        if event.message_str.strip().lower() != "memchk":
+            return
+
+        yield event.plain_result(self._build_memory_status_text())
+        event.stop_event()
+
+    def _build_memory_status_text(self) -> str:
         vm = psutil.virtual_memory()
         percent = float(vm.percent)
         total_gb = vm.total / (1024 ** 3)
@@ -51,7 +64,7 @@ class MemoryMonitorPlugin(Star):
         threshold = int(self.config.get("mem_threshold_percent", 80) or 80)
         status = "⚠️ 高于阈值" if percent >= threshold else "✅ 正常"
 
-        yield event.plain_result(
+        return (
             f"{status}\n"
             f"当前内存占用：{percent:.1f}%（阈值 {threshold}%）\n"
             f"已用/总计：{used_gb:.2f}GB / {total_gb:.2f}GB"
