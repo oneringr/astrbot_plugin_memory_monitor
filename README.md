@@ -13,14 +13,8 @@ AstrBot 插件：监控本机内存占用，达到阈值后自动在群聊中 `@
 
 ## 安装
 
-1. 将本插件放到 `AstrBot/data/plugins/astrbot_plugin_memory_monitor`。
-2. 安装依赖：
-
-```bash
-pip install -r requirements.txt
-```
-
-3. 在 AstrBot 插件管理中启用插件并填写配置。
+1. 网页安装或将本插件放到 `AstrBot/data/plugins/astrbot_plugin_memory_monitor`。
+2. 在 AstrBot 插件管理中启用插件并填写配置。
 
 ## 配置项说明
 
@@ -54,9 +48,3 @@ memchk
 当前内存占用：42.3%（阈值 80%）
 已用/总计：6.77GB / 16.00GB
 ```
-
-## 参考
-
-- 内存监控实现思路参考：`astrbot_plugin_email_tool`
-- 群消息与 @ 用户发送方式参考：`astrbot_plugin_group_welcome`
-- 插件结构参考：AstrBot 官方插件开发文档
