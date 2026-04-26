@@ -3,7 +3,7 @@ display_name: Memory Monitor (内存监控告警)
 desc: 监控本机内存占用，超过阈值后自动在群聊中@多个指定用户，并支持 memchk 查询。
 help: 配置阈值、群号与目标QQ号列表后即可自动告警；发送 memchk 可即时查看内存。
 version: 1.2.0
-author: ChatGPT
+author: OneRingR & ChatGPT
 repo: https://github.com/yourname/astrbot_plugin_memory_monitor
 support_platforms:
   - aiocqhttp
