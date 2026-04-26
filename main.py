@@ -13,7 +13,7 @@ from astrbot.api.star import Context, Star, register
     "memory_monitor",
     "OneRingR & ChatGPT",
     "监控本机内存占用，超过阈值后在群里@指定用户告警。",
-    "1.2.0",
+    "1.3.0",
 )
 class MemoryMonitorPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -41,12 +41,9 @@ class MemoryMonitorPlugin(Star):
                 pass
         logger.info("[memory_monitor] 内存监控任务已停止。")
 
-    @filter.event_message_type(filter.EventMessageType.ALL)
-    async def detect_memchk_keyword(self, event: AstrMessageEvent):
-        message = (event.message_str or "").strip()
-        if not re.search(r"\bmemchk\b", message, flags=re.IGNORECASE):
-            return
-
+    @filter.command("memchk")
+    async def memchk(self, event: AstrMessageEvent):
+        """手动查询当前内存占用。"""
         vm = psutil.virtual_memory()
         percent = float(vm.percent)
         total_gb = vm.total / (1024 ** 3)
